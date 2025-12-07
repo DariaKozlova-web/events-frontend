@@ -28,6 +28,6 @@ const getEventById = async (id) => {
   // }
 };
 
-export const EvenService = {
+export const EventService = {
   getEventById,
 };
