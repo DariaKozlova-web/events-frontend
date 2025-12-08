@@ -1,40 +1,38 @@
-import { apiConfig } from "../api/apiConfig";
-import { Link } from "react-router";
-
-// 🔧 Funktion, die die Verbindung zum Backend testet
-async function testBackendConnection() {
-  try {
-    const response = await fetch(`${apiConfig.baseUrl}/events`);
-    // ⬆️ ggf. auf /health oder deinen tatsächlichen Endpoint ändern
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await response.json();
-    console.log("✅ Backend antwortet. Antwortdaten:", data);
-
-    // Nur für den schnellen Check – später kannst du das schöner machen
-    alert("Backend OK – schau in die Konsole für Details.");
-  } catch (error) {
-    console.error("❌ Backend-Request fehlgeschlagen:", error);
-    alert("Backend-Request fehlgeschlagen – Details in der Konsole.");
-  }
-}
+import { NavLink } from "react-router";
+import logo from "../assets/logo.svg";
 
 export const Navbar = () => {
+  const user = "me";
   return (
-    <div>
-      Navigation
-      <p className="p-4 flex gap-4">
-        <button className="btn" onClick={testBackendConnection}>
-          Show Event
-        </button>
-
-        <Link to="/events/create" className="btn">
-          Create Event
-        </Link>
-      </p>
+    <div className="navbar bg-base-100 shadow-sm">
+      <div className="navbar-start">
+        <NavLink to={"/"} className="btn btn-ghost text-xl">
+          <img src={logo} alt="logo" className="w-10" />
+          <figcaption>Evendule</figcaption>
+        </NavLink>
+      </div>
+      <div className="navbar-end">
+        {user ? (
+          <>
+            <NavLink to={"/sign-up"} className={"btn"}>
+              Sign Up
+            </NavLink>
+            <NavLink to={"/sign-in"} className={"btn"}>
+              Sign In
+            </NavLink>
+            <NavLink to={"/events/create"} className={"btn ml-16"}>
+              Create Event
+            </NavLink>
+            <NavLink to={"/events/create"} className={"btn btn-info "}>
+              Create Event (Admin)
+            </NavLink>
+          </>
+        ) : (
+          <NavLink to={"/events/create"} className={"btn"}>
+            Create Event
+          </NavLink>
+        )}
+      </div>
     </div>
   );
 };

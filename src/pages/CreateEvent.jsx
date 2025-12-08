@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router";
 
-// In JS brauchst du keinen Typ-Hack, das hier reicht:
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:3001";
 
@@ -9,10 +8,10 @@ const CreateEvent = () => {
   const navigate = useNavigate();
 
   const [form, setForm] = useState({
-    title: "Title",
-    description: "Description",
+    title: "",
+    description: "",
     date: new Date().toISOString().slice(0, 10),
-    location: "Bochum",
+    location: "",
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -26,11 +25,21 @@ const CreateEvent = () => {
     }));
   }
 
+  // Quick-Fill für Testdaten
+  function handleQuickFill() {
+    setForm({
+      title: "JavaScript Meetup",
+      description: "Gemütlicher Abend mit kurzen Talks und Pizza.",
+      date: new Date().toISOString().slice(0, 10),
+      location: "Berlin",
+    });
+  }
+
   async function handleSubmit(event) {
     event.preventDefault();
     setErrorMessage(null);
 
-    // TESTMODUS: keine Token-Prüfung
+    // TESTMODUS: Keine Token-Prüfung
     // const token = localStorage.getItem("token");
     // if (!token) {
     //   setErrorMessage("Du musst eingeloggt sein, um ein Event zu erstellen.");
@@ -149,17 +158,28 @@ const CreateEvent = () => {
             className="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[100px]"
             value={form.description}
             onChange={handleChange}
-            placeholder="Kurze Infos zum Event..."
+            placeholder="Infos zum Event..."
           />
         </div>
 
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="inline-flex items-center justify-center rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-60 disabled:cursor-not-allowed hover:bg-blue-700 transition-colors"
-        >
-          {isSubmitting ? "Wird erstellt..." : "Event erstellen"}
-        </button>
+        {/* Button-Leiste */}
+        <div className="flex items-center gap-4">
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="btn inline-flex items-center justify-center rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-60 disabled:cursor-not-allowed hover:bg-blue-700 transition-colors"
+          >
+            {isSubmitting ? "Wird erstellt..." : "Event erstellen"}
+          </button>
+
+          <button
+            type="button"
+            onClick={handleQuickFill}
+            className="btn inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium"
+          >
+            Insert Test Data
+          </button>
+        </div>
       </form>
     </div>
   );
