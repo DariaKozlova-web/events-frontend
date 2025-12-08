@@ -1,0 +1,27 @@
+<!-- Variant 1: Calendar + Clock + Check -->
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240" role="img" aria-labelledby="title1 desc1">
+  <title id="title1">Eventix — schedule and confirm</title>
+  <desc id="desc1">Logo: rounded calendar with clock and checkmark</desc>
+  <rect x="16" y="32" width="208" height="176" rx="20" fill="#ffffff"/>
+  <!-- header -->
+  <rect x="16" y="32" width="208" height="44" rx="12" fill="#2B6CB0"/>
+  <!-- rings -->
+  <rect x="48" y="16" width="24" height="36" rx="6" fill="#2B6CB0"/>
+  <rect x="168" y="16" width="24" height="36" rx="6" fill="#2B6CB0"/>
+  <!-- calendar grid (subtle) -->
+  <g opacity="0.12" fill="#000">
+    <rect x="32" y="92" width="40" height="28" rx="4"/>
+    <rect x="88" y="92" width="40" height="28" rx="4"/>
+    <rect x="144" y="92" width="40" height="28" rx="4"/>
+    <rect x="32" y="132" width="40" height="28" rx="4"/>
+    <rect x="88" y="132" width="40" height="28" rx="4"/>
+    <rect x="144" y="132" width="40" height="28" rx="4"/>
+  </g>
+  <!-- clock circle -->
+  <circle cx="168" cy="156" r="36" fill="#F6AD55"/>
+  <path d="M168 144v20l16 8" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <!-- check -->
+  <path d="M62 160 l26 28 l54 -72" stroke="#38A169" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <!-- outer stroke for definition -->
+  <rect x="16" y="32" width="208" height="176" rx="20" fill="none" stroke="#CBD5E0" stroke-width="2"/>
+</svg>
