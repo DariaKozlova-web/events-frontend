@@ -14,10 +14,10 @@ export const Navbar = () => {
       <div className="navbar-end">
         {user ? (
           <>
-            <NavLink to={"/sign-in"} className={"btn"}>
+            <NavLink to={"/sign-up"} className={"btn"}>
               Sign Up
             </NavLink>
-            <NavLink to={"/sign-up"} className={"btn"}>
+            <NavLink to={"/sign-in"} className={"btn"}>
               Sign In
             </NavLink>
           </>
