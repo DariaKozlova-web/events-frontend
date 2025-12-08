@@ -3,7 +3,7 @@ import { useParams } from "react-router";
 import { EventService } from "../api/events";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import { Loader, Skeleton } from "../components/Loader";
-import L from "leaflet";
+import { geocodeAddressOpenCage } from "../api/geocode";
 import "leaflet/dist/leaflet.css";
 
 export const EventDetails = () => {
@@ -16,52 +16,44 @@ export const EventDetails = () => {
     const fetchData = async () => {
       setLoading(true);
       setError(null);
-      // const result = EvenService.getEventById(id);
 
-      // try {
-      //   const data = await EventService.getEventById(id);
-      //   setEvent(data);
-      // } catch (error) {
-      //   setError('Failed to load event. Try again later.')
-      // }finally{
-      //   setLoading(false);
-      // }
-
-      const result = {
-        id: 1,
-        title: "Event Title",
-        description: "Some Description for the Event",
-        date: "2025-12-05T19:49:30.901Z",
-        location: "Schloßbezirk 10, 76131 Karlsruhe",
-        latitude: 8.404746955649602,
-        longitude: 49.01438194665317,
-        organizerId: 1,
-        createdAt: "2025-12-05T19:49:30.901Z",
-        updatedAt: "2025-12-05T19:49:30.901Z",
-      };
-      setLoading(false);
-      if (result) {
-        setEvent(result);
-      } else {
-        setError("Oops... Something wrong!");
+      try {
+        const data = await EventService.getEventById(id);
+       // If there are no coordinates, get the address
+        if (
+          (!data.latitude && data.latitude !== 0) ||
+          (!data.longitude && data.longitude !== 0)
+        ) {
+          try {
+            const coords = await geocodeAddressOpenCage(data.location);
+            if (coords) {
+              data.latitude = coords.lat;
+              data.longitude = coords.lon;
+            } else {
+              console.warn("Geocode: no coords found for", data.location);
+            }
+          } catch (gErr) {
+            console.error("Geocode failed:", gErr);
+           // We won't stop it - we'll still display the data without a map or with a fallback
+          }
+        }
+        setEvent(data);
+      // eslint-disable-next-line no-unused-vars
+      } catch (error) {
+        setError("Failed to load event. Try again later.");
+      } finally {
+        setLoading(false);
       }
     };
-
     fetchData();
   }, [id]);
 
-  const defaultIcon = L.icon({
-    iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-    shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-  });
-  L.Marker.prototype.options.icon = defaultIcon;
 
   return (
     <>
       <div className="max-w-3xl mx-auto p-6">
         {/* LOADING */}
+        {loading && <Loader />}
         {loading && <Skeleton />}
         {/* ERROR */}
         {error && (
@@ -74,7 +66,7 @@ export const EventDetails = () => {
           <>
             <h1 className="text-3xl font-bold mb-2">{event.title}</h1>
             <p className="text-gray-600 mb-4">
-              📅{new Date(event.date).toLocaleDateString("ru-RU")} <br />
+              📅{new Date(event.date).toLocaleDateString("de-DE")} <br />
               📍 {event.location}
             </p>
             <p className="text-lg leading-relaxed mb-6">{event.description}</p>
