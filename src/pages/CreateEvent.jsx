@@ -26,7 +26,7 @@ const CreateEvent = () => {
   function handleQuickFill() {
     setForm({
       title: "JavaScript Meetup",
-      description: "Gemütlicher Abend mit kurzen Talks und Pizza.",
+      description: "Casual evening with short talks and pizza.",
       date: new Date().toISOString().slice(0, 10),
       location: "Berlin",
     });
@@ -41,13 +41,13 @@ const CreateEvent = () => {
     // 1)Check Token
     const token = localStorage.getItem("token");
     if (!token) {
-      setErrorMessage("Du musst eingeloggt sein, um ein Event zu erstellen.");
+      setErrorMessage("You must be logged in to create an event.");
       return;
     }
 
     // 2)Check Data
     if (!form.title || !form.date || !form.location) {
-      setErrorMessage("Bitte fülle mindestens Titel, Datum und Ort aus.");
+      setErrorMessage("Please fill at least title, date and location.");
       return;
     }
 
@@ -65,7 +65,7 @@ const CreateEvent = () => {
       });
 
       if (!response.ok) {
-        let message = "Fehler beim Erstellen des Events.";
+        let message = "Error while creating the event.";
         try {
           const data = await response.json();
           if (data && data.message) {
@@ -79,7 +79,7 @@ const CreateEvent = () => {
 
       navigate("/");
     } catch (error) {
-      setErrorMessage(error.message || "Unbekannter Fehler.");
+      setErrorMessage(error.message || "Unknown error.");
     } finally {
       setIsSubmitting(false);
     }
@@ -87,8 +87,7 @@ const CreateEvent = () => {
 
   return (
     <div className="max-w-xl mx-auto px-4 py-8">
-      <h1 className="text-2xl font-semibold mb-6">Neues Event erstellen</h1>
-
+      <h1 className="text-2xl font-semibold mb-6">Create New Event</h1>
       {/* Conditional Error Message */}
       {errorMessage && (
         <div className="mb-4 rounded border border-red-500 bg-red-100 text-red-800 px-3 py-2 text-sm">
@@ -100,10 +99,10 @@ const CreateEvent = () => {
       {/*================= FORM =================*/}
       {/*========================================*/}
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Titel */}
+        {/* Title */}
         <div>
           <label htmlFor="title" className="block text-sm font-medium mb-1">
-            Titel *
+            Title *
           </label>
           <input
             id="title"
@@ -112,14 +111,14 @@ const CreateEvent = () => {
             className="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             value={form.title}
             onChange={handleChange}
-            placeholder="z.B. JavaScript Meetup"
+            placeholder="e.g. JavaScript Meetup"
           />
         </div>
 
-        {/* Datum */}
+        {/* Date */}
         <div>
           <label htmlFor="date" className="block text-sm font-medium mb-1">
-            Datum *
+            Date *
           </label>
           <input
             id="date"
@@ -131,10 +130,10 @@ const CreateEvent = () => {
           />
         </div>
 
-        {/* Ort */}
+        {/* Location */}
         <div>
           <label htmlFor="location" className="block text-sm font-medium mb-1">
-            Ort / Adresse *
+            Location / Address *
           </label>
           <input
             id="location"
@@ -143,17 +142,17 @@ const CreateEvent = () => {
             className="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             value={form.location}
             onChange={handleChange}
-            placeholder="z.B. Berlin, Alexanderplatz 1"
+            placeholder="e.g. Berlin, Alexanderplatz 1"
           />
         </div>
 
-        {/* Beschreibung */}
+        {/* Description */}
         <div>
           <label
             htmlFor="description"
             className="block text-sm font-medium mb-1"
           >
-            Beschreibung
+            Description
           </label>
           <textarea
             id="description"
@@ -161,7 +160,7 @@ const CreateEvent = () => {
             className="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[100px]"
             value={form.description}
             onChange={handleChange}
-            placeholder="Infos zum Event..."
+            placeholder="Details about the event..."
           />
         </div>
 
@@ -189,7 +188,7 @@ const CreateEvent = () => {
                  focus:outline-none focus:ring-2 focus:ring-blue-500/40
                  transition-all duration-150"
             >
-              Abbrechen
+              Cancel
             </button>
 
             <button
@@ -202,7 +201,7 @@ const CreateEvent = () => {
                  focus:outline-none focus:ring-2 focus:ring-blue-500/60
                  transition-all duration-150"
             >
-              {isSubmitting ? "Wird erstellt..." : "Event erstellen"}
+              {isSubmitting ? "Creating..." : "Create event"}
             </button>
           </div>
         </div>
