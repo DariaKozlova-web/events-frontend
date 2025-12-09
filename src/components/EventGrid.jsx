@@ -9,7 +9,7 @@ export const EventGrid = ({ events }) => {
   });
 
   return (
-    <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-2">
+    <div className="grid gap-y-10 gap-x-8 md:grid-cols-2 xl:grid-cols-3 place-items-center">
       {events?.map((event) => (
         <EventCard key={event.id} event={event} />
       ))}

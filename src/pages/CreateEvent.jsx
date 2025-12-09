@@ -1,21 +1,20 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router";
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:3001";
+const API_FALLBACK = "http://localhost:3001/api";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || API_FALLBACK;
+const API_EVENTS_ENDPOINT = `${API_BASE_URL}/events`;
 
 const CreateEvent = () => {
   const navigate = useNavigate();
-
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState(null);
   const [form, setForm] = useState({
     title: "",
     description: "",
     date: new Date().toISOString().slice(0, 10),
     location: "",
   });
-
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errorMessage, setErrorMessage] = useState(null);
 
   function handleChange(event) {
     const { name, value } = event.target;
@@ -24,8 +23,6 @@ const CreateEvent = () => {
       [name]: value,
     }));
   }
-
-  // Quick-Fill für Testdaten
   function handleQuickFill() {
     setForm({
       title: "JavaScript Meetup",
@@ -34,19 +31,21 @@ const CreateEvent = () => {
       location: "Berlin",
     });
   }
-
+  /*===================================================*/
+  /*================== HANDLE SUBMIT ==================*/
+  /*===================================================*/
   async function handleSubmit(event) {
     event.preventDefault();
     setErrorMessage(null);
 
-    // TESTMODUS: Keine Token-Prüfung
-    // const token = localStorage.getItem("token");
-    // if (!token) {
-    //   setErrorMessage("Du musst eingeloggt sein, um ein Event zu erstellen.");
-    //   // navigate("/signin");
-    //   return;
-    // }
+    // 1)Check Token
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setErrorMessage("Du musst eingeloggt sein, um ein Event zu erstellen.");
+      return;
+    }
 
+    // 2)Check Data
     if (!form.title || !form.date || !form.location) {
       setErrorMessage("Bitte fülle mindestens Titel, Datum und Ort aus.");
       return;
@@ -55,12 +54,12 @@ const CreateEvent = () => {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/events`, {
+      const response = await fetch(API_EVENTS_ENDPOINT, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          // TESTMODUS: kein Auth-Header
-          // Authorization: `Bearer ${token}`,
+          // Auth-Header
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(form),
       });
@@ -72,8 +71,8 @@ const CreateEvent = () => {
           if (data && data.message) {
             message = data.message;
           }
-        } catch (_) {
-          // ignorieren
+        } catch (error) {
+          console.error(error);
         }
         throw new Error(message);
       }
@@ -90,12 +89,16 @@ const CreateEvent = () => {
     <div className="max-w-xl mx-auto px-4 py-8">
       <h1 className="text-2xl font-semibold mb-6">Neues Event erstellen</h1>
 
+      {/* Conditional Error Message */}
       {errorMessage && (
         <div className="mb-4 rounded border border-red-500 bg-red-100 text-red-800 px-3 py-2 text-sm">
           {errorMessage}
         </div>
       )}
 
+      {/*========================================*/}
+      {/*================= FORM =================*/}
+      {/*========================================*/}
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Titel */}
         <div>
@@ -162,23 +165,46 @@ const CreateEvent = () => {
           />
         </div>
 
-        {/* Button-Leiste */}
-        <div className="flex items-center gap-4">
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="btn inline-flex items-center justify-center rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-60 disabled:cursor-not-allowed hover:bg-blue-700 transition-colors"
-          >
-            {isSubmitting ? "Wird erstellt..." : "Event erstellen"}
-          </button>
-
+        {/* Buttons */}
+        <div className="mt-6 flex items-center justify-between gap-4">
+          {/* Links: Insert Test Data */}
           <button
             type="button"
             onClick={handleQuickFill}
-            className="btn inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium"
+            className="inline-flex items-center justify-center rounded border border-gray-300 px-4 py-2 text-sm font-medium
+               text-gray-700 bg-white hover:bg-gray-100 hover:border-gray-400
+               focus:outline-none focus:ring-2 focus:ring-blue-500/40
+               transition-all duration-150"
           >
             Insert Test Data
           </button>
+
+          {/* Rechts: Abbrechen + Event erstellen */}
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => navigate(-1)}
+              className="inline-flex items-center justify-center rounded border border-gray-300 px-4 py-2 text-sm font-medium
+                 text-gray-700 bg-white hover:bg-gray-100 hover:border-gray-400
+                 focus:outline-none focus:ring-2 focus:ring-blue-500/40
+                 transition-all duration-150"
+            >
+              Abbrechen
+            </button>
+
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium
+                 bg-blue-600 text-white hover:bg-blue-700
+                 disabled:opacity-60 disabled:cursor-not-allowed
+                 shadow-sm hover:shadow-md hover:-translate-y-[1px]
+                 focus:outline-none focus:ring-2 focus:ring-blue-500/60
+                 transition-all duration-150"
+            >
+              {isSubmitting ? "Wird erstellt..." : "Event erstellen"}
+            </button>
+          </div>
         </div>
       </form>
     </div>

@@ -8,7 +8,7 @@ export const EventCard = ({ event }) => {
   return (
     <Link
       to={`/events/${id}`}
-      className="card bg-base-100 w-96 shadow-sm mt-10"
+      className="card bg-base-100 w-full max-w-md shadow-sm hover:shadow-md transition-shadow"
     >
       <figure>
         <img src={image} alt={title} />

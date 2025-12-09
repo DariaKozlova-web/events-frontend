@@ -2,7 +2,7 @@ import { apiConfig } from "./apiConfig";
 
 const getEventById = async (id) => {
   try {
-    const response = await fetch(`${apiConfig.baseUrl}/api/events/${id}`);
+    const response = await fetch(`${apiConfig.baseUrl}/events/${id}`);
     if (!response.ok) {
       const msg = await response.text();
       throw new Error(`API Error: ${response.status} ${msg}`);
@@ -21,7 +21,7 @@ export const EventService = {
 
 export const fetchEvents = async () => {
   try {
-    const response = await fetch(`${apiConfig.baseUrl}/api/events`);
+    const response = await fetch(`${apiConfig.baseUrl}/events`);
     if (!response.ok) {
       const msg = await response.text();
       throw new Error(`API Error: ${response.status} ${msg}`);
