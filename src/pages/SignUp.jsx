@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router";
 
 const initialFormState = {
   name: "",
@@ -204,12 +205,12 @@ export const SignUp = () => {
                 </button>
                 <p class="text-sm text-slate-300 mt-8">
                   Already have an account?{" "}
-                  <a
-                    href="javascript:void(0);"
+                  <Link
+                    to={`/sign-in`}
                     class="text-purple-400 font-medium hover:underline ml-1"
                   >
                     Login here
-                  </a>
+                  </Link>
                 </p>
               </div>
             </form>
