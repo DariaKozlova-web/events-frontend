@@ -1,6 +1,10 @@
 import { useState } from "react";
 import { Link } from "react-router";
 
+const API_FALLBACK = "http://localhost:3001/api";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || API_FALLBACK;
+const API_USERS_ENDPOINT = `${API_BASE_URL}/users`;
+
 const initialFormState = {
   name: "",
   email: "",
@@ -21,7 +25,7 @@ export const SignUp = () => {
   const saveUser = async () => {
     try {
       // function Name soll verändert werden
-      const res = await fetch("http://localhost:3001/api/users", {
+      const res = await fetch(API_USERS_ENDPOINT, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
