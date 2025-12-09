@@ -1,6 +1,5 @@
-const local = "http://localhost:3001/api";
-// const remote = "https://events-beck-end.onrender.com/api";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 export const apiConfig = {
-  baseUrl: local,
+  baseUrl: API_BASE_URL,
 };
