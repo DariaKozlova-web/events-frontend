@@ -5,7 +5,7 @@ import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import { Loader, Skeleton } from "../components/Loader";
 import { geocodeAddressOpenCage } from "../api/geocode";
 import "leaflet/dist/leaflet.css";
-
+import { NotFound } from "./NotFound";
 import { Calendar, MapPin } from "lucide-react";
 import L from "leaflet";
 import greenMarker from "../assets/markers/marker-icon-green.png";
@@ -32,7 +32,7 @@ export const EventDetails = () => {
 
       try {
         const data = await EventService.getEventById(id);
-       // If there are no coordinates, get the address
+        // If there are no coordinates, get the address
         if (
           (!data.latitude && data.latitude !== 0) ||
           (!data.longitude && data.longitude !== 0)
@@ -47,11 +47,11 @@ export const EventDetails = () => {
             }
           } catch (gErr) {
             console.error("Geocode failed:", gErr);
-           // We won't stop it - we'll still display the data without a map or with a fallback
+            // We won't stop it - we'll still display the data without a map or with a fallback
           }
         }
         setEvent(data);
-      // eslint-disable-next-line no-unused-vars
+        // eslint-disable-next-line no-unused-vars
       } catch (error) {
         setError("Failed to load event. Try again later.");
       } finally {
@@ -61,7 +61,6 @@ export const EventDetails = () => {
     fetchData();
   }, [id]);
 
-
   return (
     <>
       <div className="max-w-3xl mx-auto p-4 md:p-8">
@@ -69,11 +68,14 @@ export const EventDetails = () => {
         {loading && <Loader />}
         {loading && <Skeleton />}
         {/* ERROR */}
-        {error && (
-          <div className="p-4 mb-4 text-red-700 bg-red-100 rounded-lg border border-red-300">
-            <p className="font-semibold">{error}</p>
-          </div>
-        )}
+        {
+          error && <NotFound />
+          // (
+          //   <div className="p-4 mb-4 text-red-700 bg-red-100 rounded-lg border border-red-300">
+          //     <p className="font-semibold">{error}</p>
+          //   </div>
+          // )
+        }
         {/* SUCCESS */}
         {event && (
           <div className="bg-white p-6 rounded-2xl shadow-xl border border-gray-100">
@@ -123,7 +125,10 @@ export const EventDetails = () => {
                   style={{ height: "350px", width: "100%" }}
                 >
                   <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                  <Marker position={[event.latitude, event.longitude]} icon={customMarker}>
+                  <Marker
+                    position={[event.latitude, event.longitude]}
+                    icon={customMarker}
+                  >
                     <Popup>{event.location}</Popup>
                   </Marker>
                 </MapContainer>
