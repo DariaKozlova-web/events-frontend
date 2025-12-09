@@ -5,6 +5,7 @@ import { SignIn } from "../pages/SignIn";
 import { SignUp } from "../pages/SignUp";
 import CreateEvent from "../pages/CreateEvent";
 import { PrivateRoute } from "../components/PrivateRoute";
+import { NotFound } from "../pages/NotFound";
 
 export const AppRouter = () => {
   return (
@@ -30,7 +31,7 @@ export const AppRouter = () => {
       />
 
       {/* Default Page if URL is invalid */}
-      <Route path="*" element={<h1>404 Not Found</h1>} />
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 };
