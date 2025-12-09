@@ -20,6 +20,7 @@ export const Navbar = () => {
             <NavLink to={"/sign-in"} className={"btn"}>
               Sign In
             </NavLink>
+            {/* Das ist ein Test Button. Kann später gelöscht werden */}
             <NavLink to={"/events/create"} className={"btn btn-info ml-16"}>
               Create Event
             </NavLink>
