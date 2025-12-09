@@ -1,13 +1,26 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router";
+import { useParams, useNavigate } from "react-router";
 import { EventService } from "../api/events";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import { Loader, Skeleton } from "../components/Loader";
 import { geocodeAddressOpenCage } from "../api/geocode";
 import "leaflet/dist/leaflet.css";
 
+import { Calendar, MapPin } from "lucide-react";
+import L from "leaflet";
+import greenMarker from "../assets/markers/marker-icon-green.png";
+import markerShadow from "../assets/markers/marker-shadow.png";
+
+const customMarker = L.icon({
+  iconUrl: greenMarker,
+  shadowUrl: markerShadow,
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+});
+
 export const EventDetails = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -51,7 +64,7 @@ export const EventDetails = () => {
 
   return (
     <>
-      <div className="max-w-3xl mx-auto p-6">
+      <div className="max-w-3xl mx-auto p-4 md:p-8">
         {/* LOADING */}
         {loading && <Loader />}
         {loading && <Skeleton />}
@@ -63,33 +76,69 @@ export const EventDetails = () => {
         )}
         {/* SUCCESS */}
         {event && (
-          <>
-            <h1 className="text-3xl font-bold mb-2">{event.title}</h1>
-            <p className="text-gray-600 mb-4">
-              📅{new Date(event.date).toLocaleDateString("de-DE")} <br />
-              📍 {event.location}
-            </p>
-            <p className="text-lg leading-relaxed mb-6">{event.description}</p>
-            {/*MAP*/}
-            <div className="rounded-lg overflow-hidden shadow-lg mb-6">
-              <MapContainer
-                center={[event.latitude, event.longitude]}
-                zoom={14}
-                style={{ height: "350px", width: "100%" }}
+          <div className="bg-white p-6 rounded-2xl shadow-xl border border-gray-100">
+            {/* TITLE + BUTTONS */}
+            <div className="flex justify-between gap-4 mb-4 flex-col sm:flex-row sm:items-center">
+              <h1 className="text-3xl font-bold text-gray-900">
+                {event.title}
+              </h1>
+
+              <button
+                onClick={() => navigate(-1)}
+                className="px-6 py-3 rounded-xl bg-evGreen text-gray-900 font-semibold shadow-md hover:bg-evGreen-dark transition-all"
               >
-                <TileLayer
-                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                  // attribution="&copy; OpenStreetMap contributors"
-                />
-                <Marker position={[event.latitude, event.longitude]}>
-                  <Popup>{event.location}</Popup>
-                </Marker>
-              </MapContainer>
+                ⬅ Back
+              </button>
             </div>
+
+            {/* INFO BLOCKS */}
+            <div className="bg-white rounded-xl p-4 shadow-md mb-6">
+              <p className="flex items-center gap-2 text-gray-700">
+                <Calendar className="w-5 h-5 text-red-500" />
+                {new Intl.DateTimeFormat("de-DE", {
+                  dateStyle: "medium",
+                }).format(new Date(event.date))}
+              </p>
+
+              <p className="flex items-center gap-2 text-gray-700 mt-2">
+                <MapPin className="w-5 h-5 text-evGreen-dark" />
+                {event.location}
+              </p>
+            </div>
+
+            {/* DESCRIPTION */}
+            <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 mb-6">
+              <h2 className="font-semibold mb-2 text-gray-800">Description</h2>
+              <p className="text-gray-700 leading-relaxed">
+                {event.description}
+              </p>
+            </div>
+
+            {/* MAP */}
+            <div className="rounded-xl overflow-hidden shadow-lg mb-6">
+              {event.latitude && event.longitude ? (
+                <MapContainer
+                  center={[event.latitude, event.longitude]}
+                  zoom={14}
+                  style={{ height: "350px", width: "100%" }}
+                >
+                  <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                  <Marker position={[event.latitude, event.longitude]} icon={customMarker}>
+                    <Popup>{event.location}</Popup>
+                  </Marker>
+                </MapContainer>
+              ) : (
+                <div className="p-6 text-center text-gray-500 bg-gray-100">
+                  Map not available
+                </div>
+              )}
+            </div>
+
+            {/* FOOTER INFO */}
             <div className="text-sm text-gray-400">
-              Created: {new Date(event.createdAt).toLocaleString()}
+              Created: {new Date(event.createdAt).toLocaleString("de-DE")}
             </div>
-          </>
+          </div>
         )}
       </div>
     </>
