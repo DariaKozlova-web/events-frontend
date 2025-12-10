@@ -1,4 +1,4 @@
-import { apiConfig } from "../api/apiConfig";
+import { apiConfig } from "./apiConfig";
 
 // 1)Fetch Login
 export async function loginUser(credentials) {

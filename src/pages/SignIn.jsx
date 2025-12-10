@@ -1,33 +1,19 @@
 /** biome-ignore-all lint/correctness/useUniqueElementIds: <not now> */
-import { useActionState } from "react";
-import { loginUser } from "../auth/authApi.js";
+import { useActionState, useEffect } from "react";
+import { useNavigate } from "react-router";
+import { validate } from "../api/auth.js";
+import { loginUser, fetchProfile } from "../api/authApi.js";
+import { useAuth } from "../context/useAuth";
 import SubmitBtn from "../components/SubmitBtn.jsx";
-import { useAuth } from "../auth/AuthContext.jsx";
 
-// Validierung
-function validate(values) {
-  const errors = {};
-  const { email, password } = values;
-
-  if (!email) {
-    errors.email = "Email is required.";
-  } else if (!/^\S+@\S+\.\S+$/.test(email)) {
-    errors.email = "Please enter a valid email.";
-  }
-
-  if (!password) {
-    errors.password = "Password is required.";
-  } else if (password.length < 6) {
-    errors.password = "Password must be at least 6 characters.";
-  }
-
-  return errors;
-}
-
-async function signInAction(_prevState, formData, login) {
-  const data = Object.fromEntries(formData); // FormData -> Objekt
+// action Funktion anstelle des Submit Handlers
+// Hat in Verbindung mit useActionState-Hook Zugriff auf
+// vorherigen State und die Formulardaten
+async function action(_prevState, formData) {
+  const data = Object.fromEntries(formData); // FormData in Objekt einlesen
   const validationErrors = validate(data);
 
+  // 1) Clientseitige Validierung wie bei Simone
   if (Object.keys(validationErrors).length > 0) {
     return {
       errors: validationErrors,
@@ -35,59 +21,47 @@ async function signInAction(_prevState, formData, login) {
     };
   }
 
+  // 2) Versuch: Login am Backend
   try {
-    // Login
-    const result = await loginUser({
+    // loginUser holt den Token vom Backend
+    const loginResponse = await loginUser({
       email: data.email,
       password: data.password,
     });
 
-    console.debug("Login successful. Backend response:", result);
+    const token = loginResponse.token;
 
-    const token = result.token;
+    // Optional: Profil nachladen, falls dein Backend das anbietet
+    // und du mehr als nur den Token brauchst
+    let user = loginResponse.user || null;
 
-    // Backend user-Objekt bevorzugt nutzen
-    const userFromBackend = result.user;
-    let user = null;
-
-    if (userFromBackend && userFromBackend.id && userFromBackend.email) {
-      user = {
-        id: userFromBackend.id,
-        email: userFromBackend.email,
-        name: userFromBackend.name,
-      };
-    } else if (result.id && result.email) {
-      // Fallback:  { id, email, token }
-      user = {
-        id: result.id,
-        email: result.email,
-        name: result.name,
-      };
+    if (!user && token) {
+      try {
+        const profile = await fetchProfile(token);
+        user = {
+          id: profile.id,
+          email: profile.email,
+          name: profile.name,
+        };
+      } catch (err) {
+        console.error("Failed to fetch profile:", err);
+        // notfalls nur mit Minimal-Daten weiterarbeiten
+        user = user ?? { id: null, email: data.email };
+      }
     }
 
-    // localStorage
-    if (token) {
-      localStorage.setItem("authToken", token);
-    }
-    if (user) {
-      localStorage.setItem("authUser", JSON.stringify(user));
-    }
-
-    // AuthContext updaten → Navbar bekommt isAuthenticated/user
-    if (token && user) {
-      login({ token, user });
-    }
-
-    alert("Login erfolgreich!");
-
+    // Rückgabe kommt in state → die Komponente kümmert sich
+    // um AuthContext.login + Redirect
     return {
-      errors: {},
+      errors: null,
       input: {},
-      success: true,
+      auth: {
+        token,
+        user: user ?? { id: null, email: data.email },
+      },
     };
   } catch (error) {
     console.error("Login failed:", error);
-
     return {
       errors: {
         form: error.message || "Login failed. Please try again.",
@@ -99,12 +73,23 @@ async function signInAction(_prevState, formData, login) {
 
 export const SignIn = () => {
   const { login } = useAuth();
+  const navigate = useNavigate();
 
-  // useActionState bekommt eine Action, die login "eingespritzt" bekommt
-  const [state, formAction, isPending] = useActionState(
-    (prevState, formData) => signInAction(prevState, formData, login),
-    {}
-  );
+  // Hook verbindet Action-Funktion und Komponenten-State
+  const [state, formAction, isPending] = useActionState(action, {});
+
+  // Sobald action einen erfolgreichen Login zurückliefert:
+  // → AuthContext setzen
+  // → auf Home redirecten
+  useEffect(() => {
+    if (state?.auth?.token && state?.auth?.user) {
+      login({
+        token: state.auth.token,
+        user: state.auth.user,
+      });
+      navigate("/");
+    }
+  }, [state, login, navigate]);
 
   return (
     <main className="min-h-screen bg-gray-900 p-8 font-sans">
@@ -113,16 +98,18 @@ export const SignIn = () => {
           Sign In
         </h2>
 
+        {/* Globale Fehlermeldung (z.B. falsches Passwort, 401) */}
         {state.errors?.form && (
           <p className="text-sm text-red-500 text-center">
             {state.errors.form}
           </p>
         )}
 
+        {/* Vom Hook vermittelte formAction */}
         <form action={formAction} className="space-y-4">
           <div>
             <label
-              className="block text-sm font-medium text-gray-300"
+              className="block text-sm font-medium text-gray-700"
               htmlFor="email"
             >
               Email
@@ -133,17 +120,17 @@ export const SignIn = () => {
               name="email"
               id="email"
               disabled={isPending}
-              className="w-full mt-1 border border-gray-700 bg-gray-900 text-gray-100 rounded px-3 py-2"
+              className="w-full mt-1 border border-gray-300 rounded px-3 py-2"
               placeholder="Enter email"
             />
             {state.errors?.email && (
-              <p className="text-sm text-red-500 mt-1">{state.errors.email}</p>
+              <p className="text-sm text-red-600 mt-1">{state.errors.email}</p>
             )}
           </div>
 
           <div>
             <label
-              className="block text-sm font-medium text-gray-300"
+              className="block text-sm font-medium text-gray-700"
               htmlFor="password"
             >
               Password
@@ -154,11 +141,11 @@ export const SignIn = () => {
               name="password"
               id="password"
               disabled={isPending}
-              className="w-full mt-1 border border-gray-700 bg-gray-900 text-gray-100 rounded px-3 py-2"
+              className="w-full mt-1 border border-gray-300 rounded px-3 py-2"
               placeholder="Enter password"
             />
             {state.errors?.password && (
-              <p className="text-sm text-red-500 mt-1">
+              <p className="text-sm text-red-600 mt-1">
                 {state.errors.password}
               </p>
             )}
