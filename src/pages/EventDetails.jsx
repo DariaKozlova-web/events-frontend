@@ -31,6 +31,10 @@ export const EventDetails = () => {
 
       try {
         const data = await EventService.getEventById(id);
+        console.log(data);
+        if(!data){
+          throw new Error(`Failed to load event. Try again later.`);
+        }
         setEvent(data);
         // eslint-disable-next-line no-unused-vars
       } catch (error) {
@@ -68,7 +72,7 @@ export const EventDetails = () => {
 
               <button
                 onClick={() => navigate(-1)}
-                className="px-6 py-3 rounded-xl bg-evGreen text-gray-900 font-semibold shadow-md hover:bg-evGreen-dark transition-all"
+                className="px-4 py-2 rounded-xl bg-evGreen text-gray-900 font-semibold shadow-md hover:bg-evGreen-dark transition-all"
               >
                 ⬅ Back
               </button>

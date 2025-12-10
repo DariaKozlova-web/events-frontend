@@ -25,7 +25,7 @@ export const NotFound=() =>{
       {/* Button */}
       <Link
         to="/"
-        className="px-6 py-3 rounded-xl bg-evGreen text-gray-900 font-semibold shadow-md hover:bg-evGreen-dark transition-all"
+        className="px-4 py-2 rounded-xl bg-evGreen text-gray-900 font-semibold shadow-md hover:bg-evGreen-dark transition-all"
       >
        Back to homepage
       </Link>
