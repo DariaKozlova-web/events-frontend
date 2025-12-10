@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
+import { getCoordsByAddress } from "../utils/getCoordsByAddress";
+import { useAddressAutocomplete } from "../hooks/useAddressAutocomplete";
 
 const API_FALLBACK = "http://localhost:3001/api";
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || API_FALLBACK;
@@ -9,12 +11,21 @@ const CreateEvent = () => {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
+  const [locationErrorMessage, setLocationErrorMessage] = useState(null);
   const [form, setForm] = useState({
     title: "",
     description: "",
     date: new Date().toISOString().slice(0, 10),
     location: "",
   });
+  const [selectedCoords, setSelectedCoords] = useState(null); //stores the coordinates of the selected address (lat/lon)
+
+//   A custom hook that:
+// Sends a request to the autocomplete API (for example, OpenCage) when an address is entered.
+// Returns results (a list of suggestions) and loading.
+  const { results: suggestions, loading: suggestionsLoading } =
+    useAddressAutocomplete(form.location);
+  const [showSuggestions, setShowSuggestions] = useState(false); //Controls the visibility of the autocomplete drop-down list.
 
   function handleChange(event) {
     const { name, value } = event.target;
@@ -22,6 +33,7 @@ const CreateEvent = () => {
       ...prev,
       [name]: value,
     }));
+    setLocationErrorMessage(null);
   }
   function handleQuickFill() {
     setForm({
@@ -51,6 +63,26 @@ const CreateEvent = () => {
       return;
     }
 
+    // ****************************
+    // 3) Check valid address
+    // Get coordinates: either selected or via API
+    let coordsResult = selectedCoords;
+    // If the user hasn't selected from the prompt, we make a regular request.
+    if (!coordsResult) {
+      coordsResult = await getCoordsByAddress(form.location); // geocoding by address
+    }
+    // const coordsResult = await getCoordsByAddress(form.location);
+    const requestBody = { ...form };
+    if (coordsResult) {
+      requestBody.latitude = coordsResult.latitude; // add latitude
+      requestBody.longitude = coordsResult.longitude; // add longitude
+    } else {
+      setLocationErrorMessage("The address is not exist."); // address not found
+      return;
+    }
+
+    // ************************
+
     setIsSubmitting(true);
 
     try {
@@ -61,7 +93,7 @@ const CreateEvent = () => {
           // Auth-Header
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(form),
+        body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {
@@ -131,7 +163,7 @@ const CreateEvent = () => {
         </div>
 
         {/* Location */}
-        <div>
+        <div className="relative">
           <label htmlFor="location" className="block text-sm font-medium mb-1">
             Location / Address *
           </label>
@@ -139,11 +171,46 @@ const CreateEvent = () => {
             id="location"
             name="location"
             type="text"
-            className="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-evGreen focus:border-evGreen transition-all"
             value={form.location}
             onChange={handleChange}
+            onFocus={() => setShowSuggestions(true)} // show tooltips on focus
+            onBlur={() => setTimeout(() => setShowSuggestions(false), 150)} // hide the tooltips after focus leaves
             placeholder="e.g. Berlin, Alexanderplatz 1"
+            autoComplete="off"
           />
+
+          {suggestionsLoading && (
+            <div className="absolute left-0 right-0 bg-white border border-gray-200 rounded-b px-3 py-2 text-sm text-gray-500">
+              Loading...
+            </div>
+          )}
+
+          {showSuggestions && suggestions.length > 0 && (
+            <ul className="absolute left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-md z-20 max-h-60 overflow-auto mt-1 animate-fadeIn">
+              {suggestions.map((s, idx) => (
+                <li
+                  key={idx}
+                  className="px-3 py-2 text-sm cursor-pointer hover:bg-evGreen hover:text-white transition-all "
+                  onClick={() => {
+                    setForm((prev) => ({
+                      ...prev,
+                      location: s.formatted,
+                    })); // save the selected address
+                    setSelectedCoords({ latitude: s.lat, longitude: s.lon }); // save coordinates
+                    setLocationErrorMessage(null);
+                    setShowSuggestions(false); // hide hints after selection
+                  }}
+                >
+                  {s.formatted}
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {locationErrorMessage && (
+            <div className="text-red-500 text-sm mt-1">{locationErrorMessage}</div>
+          )}
         </div>
 
         {/* Description */}
@@ -197,7 +264,7 @@ const CreateEvent = () => {
               className="inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium
                  bg-blue-600 text-white hover:bg-blue-700
                  disabled:opacity-60 disabled:cursor-not-allowed
-                 shadow-sm hover:shadow-md hover:-translate-y-[1px]
+                 shadow-sm hover:shadow-md hover:-translate-y-px
                  focus:outline-none focus:ring-2 focus:ring-blue-500/60
                  transition-all duration-150"
             >
