@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router";
+import { getCoordsByAddress } from "../utils/getCoordsByAddress";
 
 const API_FALLBACK = "http://localhost:3001/api";
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || API_FALLBACK;
@@ -9,6 +10,7 @@ const CreateEvent = () => {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
+  const [locationErrorMessage, setLocationErrorMessage] = useState(null);
   const [form, setForm] = useState({
     title: "",
     description: "",
@@ -22,6 +24,7 @@ const CreateEvent = () => {
       ...prev,
       [name]: value,
     }));
+    setLocationErrorMessage(null);
   }
   function handleQuickFill() {
     setForm({
@@ -51,6 +54,21 @@ const CreateEvent = () => {
       return;
     }
 
+
+    // ****************************
+    // 3) Check valid address
+    const coordsResult = await getCoordsByAddress(form.location);
+    const requestBody = { ...form };
+    if (coordsResult) {
+      requestBody.latitude = coordsResult.latitude;
+      requestBody.longitude = coordsResult.longitude;
+    } else {
+      setLocationErrorMessage("The address is not exist.");
+      return;
+    }
+
+    // ************************
+
     setIsSubmitting(true);
 
     try {
@@ -61,7 +79,7 @@ const CreateEvent = () => {
           // Auth-Header
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(form),
+        body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {
@@ -144,6 +162,9 @@ const CreateEvent = () => {
             onChange={handleChange}
             placeholder="e.g. Berlin, Alexanderplatz 1"
           />
+          {locationErrorMessage && (
+            <div className="text-red-500">{locationErrorMessage}</div>
+          )}
         </div>
 
         {/* Description */}

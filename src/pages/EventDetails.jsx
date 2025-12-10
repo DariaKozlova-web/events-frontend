@@ -3,7 +3,6 @@ import { useParams, useNavigate } from "react-router";
 import { EventService } from "../api/events";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import { Loader, Skeleton } from "../components/Loader";
-import { geocodeAddressOpenCage } from "../api/geocode";
 import "leaflet/dist/leaflet.css";
 import { NotFound } from "./NotFound";
 import { Calendar, MapPin } from "lucide-react";
@@ -32,24 +31,6 @@ export const EventDetails = () => {
 
       try {
         const data = await EventService.getEventById(id);
-        // If there are no coordinates, get the address
-        if (
-          (!data.latitude && data.latitude !== 0) ||
-          (!data.longitude && data.longitude !== 0)
-        ) {
-          try {
-            const coords = await geocodeAddressOpenCage(data.location);
-            if (coords) {
-              data.latitude = coords.lat;
-              data.longitude = coords.lon;
-            } else {
-              console.warn("Geocode: no coords found for", data.location);
-            }
-          } catch (gErr) {
-            console.error("Geocode failed:", gErr);
-            // We won't stop it - we'll still display the data without a map or with a fallback
-          }
-        }
         setEvent(data);
         // eslint-disable-next-line no-unused-vars
       } catch (error) {
