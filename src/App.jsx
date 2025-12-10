@@ -6,9 +6,6 @@ function App() {
   return (
     <BrowserRouter>
       <div className="min-h-screen flex flex-col">
-        {/* Navigation */}
-        <Navbar />
-
         {/* Content */}
         <main className="flex-1">
           <AppRouter />

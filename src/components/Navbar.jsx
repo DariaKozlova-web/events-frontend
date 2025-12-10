@@ -1,8 +1,7 @@
 import { NavLink } from "react-router";
 import logo from "../assets/logo.svg";
 
-export const Navbar = () => {
-  const user = "me";
+export const Navbar = ({ user }) => {
   return (
     <div className="navbar bg-base-100 shadow-sm px-6 pt-2">
       <div className="navbar-start">
@@ -13,6 +12,10 @@ export const Navbar = () => {
       </div>
       <div className="navbar-end">
         {user ? (
+          <NavLink to={"/events/create"} className={"btn btn-info ml-16"}>
+            Create Event
+          </NavLink>
+        ) : (
           <>
             <NavLink to={"/sign-up"} className={"btn"}>
               Sign Up
@@ -20,15 +23,7 @@ export const Navbar = () => {
             <NavLink to={"/sign-in"} className={"btn"}>
               Sign In
             </NavLink>
-            {/* Das ist ein Test Button. Kann später gelöscht werden */}
-            <NavLink to={"/events/create"} className={"btn btn-info ml-16"}>
-              Create Event
-            </NavLink>
           </>
-        ) : (
-          <NavLink to={"/events/create"} className={"btn btn-info ml-16"}>
-            Create Event
-          </NavLink>
         )}
       </div>
     </div>
