@@ -7,13 +7,13 @@ import SubmitBtn from "../components/SubmitBtn.jsx";
 // Hat in Verbindung mit useActionState-Hook Zugriff auf
 // vorherigen State und die Formulardaten
 async function action(_prevState, formData) {
-  console.debug(_prevState);
+  console.log(_prevState);
   const data = Object.fromEntries(formData); // FormData in Objekt einlesen
   const validationErrors = validate(data);
 
   if (Object.keys(validationErrors).length === 0) {
     // hier würde Netzwerkrequest stattfinden
-    console.debug("Submitted:", data);
+    console.log("Submitted:", data);
     signIn(data);
     alert("Form submitted successfully!");
 
