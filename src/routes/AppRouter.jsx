@@ -6,32 +6,36 @@ import { SignUp } from "../pages/SignUp";
 import CreateEvent from "../pages/CreateEvent";
 import { PrivateRoute } from "../components/PrivateRoute";
 import { NotFound } from "../pages/NotFound";
+import MainLayout from "../layouts/MainLayout";
 
 export const AppRouter = () => {
   return (
     <Routes>
-      {/* Home Page */}
-      <Route path="/" element={<Home />} />
+      {/* MainLayout */}
+      <Route path="/" element={<MainLayout />}>
+        {/* Events */}
+        <Route index element={<Home />} />
 
-      {/* Event Details */}
-      <Route path="/events/:id" element={<EventDetails />} />
+        {/* Event Details */}
+        <Route path="/events/:id" element={<EventDetails />} />
 
-      {/* Autorization */}
-      <Route path="/sign-in" element={<SignIn />} />
-      <Route path="/sign-up" element={<SignUp />} />
+        {/* Autorization */}
+        <Route path="/sign-in" element={<SignIn />} />
+        <Route path="/sign-up" element={<SignUp />} />
 
-      {/* Event Creation - Protected */}
-      <Route
-        path="/events/create"
-        element={
-          // <PrivateRoute>
-          <CreateEvent />
-          // </PrivateRoute>
-        }
-      />
+        {/* Event Creation - Protected */}
+        <Route
+          path="/events/create"
+          element={
+            // <PrivateRoute>
+            <CreateEvent />
+            // </PrivateRoute>
+          }
+        />
 
-      {/* Default Page if URL is invalid */}
-      <Route path="*" element={<NotFound />} />
+        {/* Default Page if URL is invalid */}
+        <Route path="*" element={<NotFound />} />
+      </Route>
     </Routes>
   );
 };

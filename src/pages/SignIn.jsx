@@ -1,38 +1,29 @@
 /** biome-ignore-all lint/correctness/useUniqueElementIds: <not now> */
 import { useActionState } from "react";
-import { validate, signIn } from "../api/auth.js";
+import { signIn } from "../api/auth.js";
 import SubmitBtn from "../components/SubmitBtn.jsx";
-
-// action Funktion anstelle des Submit Handlers
-// Hat in Verbindung mit useActionState-Hook Zugriff auf
-// vorherigen State und die Formulardaten
-async function action(_prevState, formData) {
-  console.log(_prevState);
-  const data = Object.fromEntries(formData); // FormData in Objekt einlesen
-  const validationErrors = validate(data);
-
-  if (Object.keys(validationErrors).length === 0) {
-    // hier würde Netzwerkrequest stattfinden
-    console.log("Submitted:", data);
-    signIn(data);
-    alert("Form submitted successfully!");
-
-    // Rückgabe kommt in state
-    return {};
-  }
-  // Bei Fehlern können wir den state nutzen, um
-  // die ursprüngliche Nutzereingabe zu erhalten
-  // und Fehlermeldungen anzuzeigen.
-  return {
-    errors: validationErrors,
-    input: data,
-  };
-}
+import { useNavigate, useOutletContext } from "react-router";
 
 export const SignIn = () => {
+  const { setUser } = useOutletContext();
+  const navigate = useNavigate();
+  async function action(_prevState, formData) {
+    const data = Object.fromEntries(formData); // FormData in Objekt einlesen
+    return signIn(data)
+      .then((userData) => {
+        setUser(userData);
+        navigate("/");
+        return {};
+      })
+      .catch((error) => {
+        return {
+          error,
+          input: data,
+        };
+      });
+  }
   // Hook verbinded Action-Funktion und Komponenten-State
   const [state, formAction, isPending] = useActionState(action, {});
-
   return (
     <main className="min-h-screen bg-gray-900 p-8 font-sans">
       <div className="max-w-xl mx-auto bg-gray-950 p-6 rounded-lg shadow space-y-6">
@@ -57,9 +48,6 @@ export const SignIn = () => {
               className="w-full mt-1 border border-gray-300 rounded px-3 py-2"
               placeholder="Enter email"
             />
-            {state.errors?.email && (
-              <p className="text-sm text-red-600 mt-1">{state.errors.email}</p>
-            )}
           </div>
           <div>
             <label
@@ -77,13 +65,13 @@ export const SignIn = () => {
               className="w-full mt-1 border border-gray-300 rounded px-3 py-2"
               placeholder="Enter password"
             />
-            {state.errors?.password && (
-              <p className="text-sm text-red-600 mt-1">
-                {state.errors.password}
-              </p>
-            )}
           </div>
           <SubmitBtn />
+          {state.error && (
+            <p className="text-sm text-red-600 mt-1">
+              Email or Password not correct!
+            </p>
+          )}
         </form>
       </div>
     </main>
