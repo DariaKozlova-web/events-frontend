@@ -7,7 +7,7 @@ export default function MainLayout() {
 
   return (
     <div className="body">
-      <Navbar user={user} />
+      <Navbar />
       {/* Outlet rendert die Child-Routes an dieser Stelle */}
       {/* context prop übergibt Daten an alle Child-Components */}
       <Outlet context={{ user, setUser }} />
