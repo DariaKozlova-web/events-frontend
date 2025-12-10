@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router";
 import { getCoordsByAddress } from "../utils/getCoordsByAddress";
+import { useAddressAutocomplete } from "../utils/useAddressAutocomplete";
 
 const API_FALLBACK = "http://localhost:3001/api";
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || API_FALLBACK;
@@ -17,6 +18,14 @@ const CreateEvent = () => {
     date: new Date().toISOString().slice(0, 10),
     location: "",
   });
+  const [selectedCoords, setSelectedCoords] = useState(null); //stores the coordinates of the selected address (lat/lon)
+
+//   A custom hook that:
+// Sends a request to the autocomplete API (for example, OpenCage) when an address is entered.
+// Returns results (a list of suggestions) and loading.
+  const { results: suggestions, loading: suggestionsLoading } =
+    useAddressAutocomplete(form.location);
+  const [showSuggestions, setShowSuggestions] = useState(false); //Controls the visibility of the autocomplete drop-down list.
 
   function handleChange(event) {
     const { name, value } = event.target;
@@ -54,16 +63,21 @@ const CreateEvent = () => {
       return;
     }
 
-
     // ****************************
     // 3) Check valid address
-    const coordsResult = await getCoordsByAddress(form.location);
+    // Get coordinates: either selected or via API
+    let coordsResult = selectedCoords;
+    // If the user hasn't selected from the prompt, we make a regular request.
+    if (!coordsResult) {
+      coordsResult = await getCoordsByAddress(form.location); // geocoding by address
+    }
+    // const coordsResult = await getCoordsByAddress(form.location);
     const requestBody = { ...form };
     if (coordsResult) {
-      requestBody.latitude = coordsResult.latitude;
-      requestBody.longitude = coordsResult.longitude;
+      requestBody.latitude = coordsResult.latitude; // add latitude
+      requestBody.longitude = coordsResult.longitude; // add longitude
     } else {
-      setLocationErrorMessage("The address is not exist.");
+      setLocationErrorMessage("The address is not exist."); // address not found
       return;
     }
 
@@ -149,7 +163,7 @@ const CreateEvent = () => {
         </div>
 
         {/* Location */}
-        <div>
+        <div className="relative">
           <label htmlFor="location" className="block text-sm font-medium mb-1">
             Location / Address *
           </label>
@@ -160,8 +174,40 @@ const CreateEvent = () => {
             className="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             value={form.location}
             onChange={handleChange}
+            onFocus={() => setShowSuggestions(true)} // show tooltips on focus
+            onBlur={() => setTimeout(() => setShowSuggestions(false), 150)} // hide the tooltips after focus leaves
             placeholder="e.g. Berlin, Alexanderplatz 1"
+            autoComplete="off"
           />
+
+          {suggestionsLoading && (
+            <div className="absolute left-0 right-0 bg-white border border-gray-300 rounded-b px-3 py-2 text-sm text-gray-500">
+              Loading...
+            </div>
+          )}
+
+          {showSuggestions && suggestions.length > 0 && (
+            <ul className="absolute left-0 right-0 bg-white border border-gray-300 rounded-md shadow-md z-20 max-h-60 overflow-auto">
+              {suggestions.map((s, idx) => (
+                <li
+                  key={idx}
+                  className="px-3 py-2 text-sm hover:bg-gray-100 cursor-pointer"
+                  onClick={() => {
+                    setForm((prev) => ({
+                      ...prev,
+                      location: s.formatted,
+                    })); // save the selected address
+                    setSelectedCoords({ latitude: s.lat, longitude: s.lon }); // save coordinates
+                    setLocationErrorMessage(null);
+                    setShowSuggestions(false); // hide hints after selection
+                  }}
+                >
+                  {s.formatted}
+                </li>
+              ))}
+            </ul>
+          )}
+
           {locationErrorMessage && (
             <div className="text-red-500">{locationErrorMessage}</div>
           )}
