@@ -11,7 +11,7 @@ export const validate = ({ email, password }) => {
   } else if (!/\S+@\S+\.\S+/.test(email)) {
     newErrors.email = "Invalid email format.";
   }
-  if (!password.trim()) newErrors.message = "Password is required.";
+  if (!password.trim()) newErrors.password = "Password is required.";
   return newErrors;
 };
 

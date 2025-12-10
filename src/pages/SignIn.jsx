@@ -123,9 +123,6 @@ export const SignIn = () => {
               className="w-full mt-1 border border-gray-300 rounded px-3 py-2"
               placeholder="Enter email"
             />
-            {state.errors?.email && (
-              <p className="text-sm text-red-600 mt-1">{state.errors.email}</p>
-            )}
           </div>
 
           <div>
@@ -144,14 +141,14 @@ export const SignIn = () => {
               className="w-full mt-1 border border-gray-300 rounded px-3 py-2"
               placeholder="Enter password"
             />
-            {state.errors?.password && (
-              <p className="text-sm text-red-600 mt-1">
-                {state.errors.password}
-              </p>
-            )}
           </div>
 
           <SubmitBtn />
+          {state.error && (
+            <p className="text-sm text-red-600 mt-1">
+              Email or Password not correct!
+            </p>
+          )}
         </form>
       </div>
     </main>
