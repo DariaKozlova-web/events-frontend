@@ -24,9 +24,9 @@ export const AppRouter = () => {
       <Route
         path="/events/create"
         element={
-          // <PrivateRoute>
-          <CreateEvent />
-          // </PrivateRoute>
+          <PrivateRoute>
+            <CreateEvent />
+          </PrivateRoute>
         }
       />
 

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router";
 import { getCoordsByAddress } from "../utils/getCoordsByAddress";
 import { useAddressAutocomplete } from "../hooks/useAddressAutocomplete";
@@ -51,7 +51,7 @@ const CreateEvent = () => {
     setErrorMessage(null);
 
     // 1)Check Token
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("authToken");
     if (!token) {
       setErrorMessage("You must be logged in to create an event.");
       return;

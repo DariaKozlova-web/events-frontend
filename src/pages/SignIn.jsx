@@ -1,37 +1,95 @@
 /** biome-ignore-all lint/correctness/useUniqueElementIds: <not now> */
-import { useActionState } from "react";
-import { validate, signIn } from "../api/auth.js";
+import { useActionState, useEffect } from "react";
+import { useNavigate } from "react-router";
+import { validate } from "../api/auth.js";
+import { loginUser, fetchProfile } from "../api/authApi.js";
+import { useAuth } from "../context/useAuth";
 import SubmitBtn from "../components/SubmitBtn.jsx";
 
 // action Funktion anstelle des Submit Handlers
 // Hat in Verbindung mit useActionState-Hook Zugriff auf
 // vorherigen State und die Formulardaten
 async function action(_prevState, formData) {
-  console.log(_prevState);
   const data = Object.fromEntries(formData); // FormData in Objekt einlesen
   const validationErrors = validate(data);
 
-  if (Object.keys(validationErrors).length === 0) {
-    // hier würde Netzwerkrequest stattfinden
-    console.log("Submitted:", data);
-    signIn(data);
-    alert("Form submitted successfully!");
-
-    // Rückgabe kommt in state
-    return {};
+  // 1) Clientseitige Validierung wie bei Simone
+  if (Object.keys(validationErrors).length > 0) {
+    return {
+      errors: validationErrors,
+      input: data,
+    };
   }
-  // Bei Fehlern können wir den state nutzen, um
-  // die ursprüngliche Nutzereingabe zu erhalten
-  // und Fehlermeldungen anzuzeigen.
-  return {
-    errors: validationErrors,
-    input: data,
-  };
+
+  // 2) Versuch: Login am Backend
+  try {
+    // loginUser holt den Token vom Backend
+    const loginResponse = await loginUser({
+      email: data.email,
+      password: data.password,
+    });
+
+    const token = loginResponse.token;
+
+    // Optional: Profil nachladen, falls dein Backend das anbietet
+    // und du mehr als nur den Token brauchst
+    let user = loginResponse.user || null;
+
+    if (!user && token) {
+      try {
+        const profile = await fetchProfile(token);
+        user = {
+          id: profile.id,
+          email: profile.email,
+          name: profile.name,
+        };
+      } catch (err) {
+        console.error("Failed to fetch profile:", err);
+        // notfalls nur mit Minimal-Daten weiterarbeiten
+        user = user ?? { id: null, email: data.email };
+      }
+    }
+
+    // Rückgabe kommt in state → die Komponente kümmert sich
+    // um AuthContext.login + Redirect
+    return {
+      errors: null,
+      input: {},
+      auth: {
+        token,
+        user: user ?? { id: null, email: data.email },
+      },
+    };
+  } catch (error) {
+    console.error("Login failed:", error);
+    return {
+      errors: {
+        form: error.message || "Login failed. Please try again.",
+      },
+      input: data,
+    };
+  }
 }
 
 export const SignIn = () => {
-  // Hook verbinded Action-Funktion und Komponenten-State
+  const { login } = useAuth();
+  const navigate = useNavigate();
+
+  // Hook verbindet Action-Funktion und Komponenten-State
   const [state, formAction, isPending] = useActionState(action, {});
+
+  // Sobald action einen erfolgreichen Login zurückliefert:
+  // → AuthContext setzen
+  // → auf Home redirecten
+  useEffect(() => {
+    if (state?.auth?.token && state?.auth?.user) {
+      login({
+        token: state.auth.token,
+        user: state.auth.user,
+      });
+      navigate("/");
+    }
+  }, [state, login, navigate]);
 
   return (
     <main className="min-h-screen bg-gray-900 p-8 font-sans">
@@ -39,6 +97,14 @@ export const SignIn = () => {
         <h2 className="text-2xl font-bold text-center text-gray-200">
           Sign In
         </h2>
+
+        {/* Globale Fehlermeldung (z.B. falsches Passwort, 401) */}
+        {state.errors?.form && (
+          <p className="text-sm text-red-500 text-center">
+            {state.errors.form}
+          </p>
+        )}
+
         {/* Vom Hook vermittelte formAction */}
         <form action={formAction} className="space-y-4">
           <div>
@@ -57,10 +123,8 @@ export const SignIn = () => {
               className="w-full mt-1 border border-gray-300 rounded px-3 py-2"
               placeholder="Enter email"
             />
-            {state.errors?.email && (
-              <p className="text-sm text-red-600 mt-1">{state.errors.email}</p>
-            )}
           </div>
+
           <div>
             <label
               className="block text-sm font-medium text-gray-700"
@@ -77,13 +141,14 @@ export const SignIn = () => {
               className="w-full mt-1 border border-gray-300 rounded px-3 py-2"
               placeholder="Enter password"
             />
-            {state.errors?.password && (
-              <p className="text-sm text-red-600 mt-1">
-                {state.errors.password}
-              </p>
-            )}
           </div>
+
           <SubmitBtn />
+          {state.error && (
+            <p className="text-sm text-red-600 mt-1">
+              Email or Password not correct!
+            </p>
+          )}
         </form>
       </div>
     </main>
