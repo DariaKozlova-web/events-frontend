@@ -1,93 +1,121 @@
-import { useState } from "react";
+import { useActionState, useState, useEffect } from "react";
 import { Link } from "react-router";
-
+import { useNavigate } from "react-router";
 const API_FALLBACK = "http://localhost:3001/api";
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || API_FALLBACK;
 const API_USERS_ENDPOINT = `${API_BASE_URL}/users`;
 
-const initialFormState = {
-  name: "",
-  email: "",
-  password: "",
+const saveUser = async (formData) => {
+  try {
+    const res = await fetch(API_USERS_ENDPOINT, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(formData),
+      //
+    });
+    if (!res.ok) throw new Error("Fetch failed");
+
+    const data = await res.json();
+    console.log(data);
+  } catch {
+    console.log("error");
+  }
+};
+
+const submitAction = async (prevState, formData) => {
+  const name = formData.get("name");
+  const email = formData.get("email");
+  const password = formData.get("password");
+  const validationErrors = validate({ name, email, password });
+  if (Object.keys(validationErrors).length > 0) {
+    return { error: validationErrors, success: false };
+  }
+  console.log("Submitted:", { name, email, password });
+  alert("Form submitted successfully!");
+  saveUser({ name, email, password });
+  return { error: null, success: true }; // clear errors on success
+};
+
+const validate = ({ name, email, password }) => {
+  const newErrors = {};
+  if (!name.trim()) newErrors.name = "Name is required.";
+  if (!email.trim()) {
+    newErrors.email = "Email is required.";
+  } else if (!/\S+@\S+\.\S+/.test(email)) {
+    newErrors.email = "Invalid email format.";
+  }
+  if (!password.trim()) newErrors.password = "password is required.";
+  return newErrors;
 };
 
 export const SignUp = () => {
-  const [formState, setFormstate] = useState(initialFormState);
-  const [data, setData] = useState([]);
+  const navigate = useNavigate();
+  const [state, formAction, isPending] = useActionState(submitAction, {});
 
+  const [{ name, email, password }, setFormData] = useState({
+    name: "",
+    email: "",
+    password: "",
+  });
   const handleChange = (e) => {
-    const value = e.target.value;
-    const field = e.target.name;
-    const newFormState = { ...formState, [field]: value };
-    setFormstate(newFormState);
+    setFormData((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
   };
 
-  const saveUser = async () => {
-    try {
-      // function Name soll verändert werden
-      const res = await fetch(API_USERS_ENDPOINT, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formState),
-        //
-      });
-      if (!res.ok) throw new Error("Fetch failed");
-
-      setData(await res.json());
-      console.log(data);
-    } catch {
-      console.log("error");
+  useEffect(() => {
+    if (state.success) {
+      navigate("/");
     }
-  };
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log(formState);
-    saveUser();
-  };
+  }, [state, navigate]);
 
   return (
     <>
-      <div class="bg-white md:h-screen">
-        <div class="grid md:grid-cols-2 items-center h-full">
+      <div className="bg-white md:h-screen">
+        <div className="grid md:grid-cols-2 items-center h-full">
           {/* <div class="max-md:order-1 object-contain"> */}
           <img
             src="https://images.unsplash.com/photo-1496917756835-20cb06e75b4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1908&q=80"
-            class=" w-full h-full aspect-square object-cover block mx-auto"
+            className=" w-full h-full aspect-square object-cover block mx-auto"
             alt="login-image"
           />
-          {/* </div> */}
 
-          <div class="flex items-center lg:p-12 p-8 bg-[#0C172C] h-full lg:w-12/12 lg:ml-auto">
-            <form class="max-w-lg w-full mx-auto" onSubmit={handleSubmit}>
+          <div className="flex items-center lg:p-12 p-8 bg-[#0C172C] h-full lg:w-12/12 lg:ml-auto">
+            <form className="max-w-lg w-full mx-auto" action={formAction}>
               {/* Form */}
-              <div class="mb-12">
-                <h1 class="text-3xl font-semibold text-purple-400">
+              <div className="mb-12">
+                <h1 className="text-3xl font-semibold text-purple-400">
                   Create an account
                 </h1>
               </div>
-
               <div>
-                <label class="text-white text-xs block mb-2" htmlFor="name">
+                <label className="text-white text-xs block mb-2" htmlFor="name">
                   Full Name
                 </label>
-                <div class="relative flex items-center">
+                <div className="relative flex items-center">
                   <input
                     name="name"
                     type="text"
                     id="name"
                     required
-                    class="w-full bg-transparent text-sm text-white border-b border-slate-500 focus:border-white pl-2 pr-8 py-3 outline-none"
+                    className="w-full bg-transparent text-sm text-white border-b border-slate-500 focus:border-white pl-2 pr-8 py-3 outline-none"
                     placeholder="Enter name"
-                    value={formState.name}
+                    value={name}
                     onChange={handleChange}
                   />
+                  {state.error?.name && (
+                    <p className="text-sm text-red-600 mt-1">
+                      {state.error?.name}
+                    </p>
+                  )}
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     fill="#bbb"
                     stroke="#bbb"
-                    class="w-[18px] h-[18px] absolute right-2"
+                    className="w-[18px] h-[18px] absolute right-2"
                     viewBox="0 0 24 24"
                   >
                     <circle
@@ -103,25 +131,33 @@ export const SignUp = () => {
                   </svg>
                 </div>
               </div>
-              <div class="mt-8">
-                <label class="text-white text-xs block mb-2" htmlFor="email">
+              <div className="mt-8">
+                <label
+                  className="text-white text-xs block mb-2"
+                  htmlFor="email"
+                >
                   Email
                 </label>
-                <div class="relative flex items-center">
+                <div className="relative flex items-center">
                   <input
                     name="email"
                     type="text"
                     required
-                    class="w-full bg-transparent text-sm text-white border-b border-slate-500 focus:border-white pl-2 pr-8 py-3 outline-none"
+                    className="w-full bg-transparent text-sm text-white border-b border-slate-500 focus:border-white pl-2 pr-8 py-3 outline-none"
                     placeholder="Enter email"
-                    value={formState.email}
+                    value={email}
                     onChange={handleChange}
                   />
+                  {state.error?.email && (
+                    <p className="text-sm text-red-600 mt-1">
+                      {state.error?.email}
+                    </p>
+                  )}
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     fill="#bbb"
                     stroke="#bbb"
-                    class="w-[18px] h-[18px] absolute right-2"
+                    className="w-[18px] h-[18px] absolute right-2"
                     viewBox="0 0 682.667 682.667"
                   >
                     <defs>
@@ -133,13 +169,13 @@ export const SignUp = () => {
                       </clipPath>
                     </defs>
                     <g
-                      clip-path="url(#a)"
+                      clipPath="url(#a)"
                       transform="matrix(1.33 0 0 -1.33 0 682.667)"
                     >
                       <path
                         fill="none"
-                        stroke-miterlimit="10"
-                        stroke-width="40"
+                        strokeMiterlimit="10"
+                        strokeWidth="40"
                         d="M452 444H60c-22.091 0-40-17.909-40-40v-39.446l212.127-157.782c14.17-10.54 33.576-10.54 47.746 0L492 364.554V404c0 22.091-17.909 40-40 40Z"
                         data-original="#000000"
                       ></path>
@@ -151,25 +187,33 @@ export const SignUp = () => {
                   </svg>
                 </div>
               </div>
-              <div class="mt-8">
-                <label class="text-white text-xs block mb-2" htmlFor="password">
+              <div className="mt-8">
+                <label
+                  className="text-white text-xs block mb-2"
+                  htmlFor="password"
+                >
                   Password
                 </label>
-                <div class="relative flex items-center">
+                <div className="relative flex items-center">
                   <input
                     name="password"
                     type="password"
                     required
-                    class="w-full bg-transparent text-sm text-white border-b border-slate-500 focus:border-white pl-2 pr-8 py-3 outline-none"
+                    className="w-full bg-transparent text-sm text-white border-b border-slate-500 focus:border-white pl-2 pr-8 py-3 outline-none"
                     placeholder="Enter password"
-                    value={formState.password}
+                    value={password}
                     onChange={handleChange}
                   />
+                  {state.error?.password && (
+                    <p className="text-sm text-red-600 mt-1">
+                      {state.error?.password}
+                    </p>
+                  )}
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     fill="#bbb"
                     stroke="#bbb"
-                    class="w-[18px] h-[18px] absolute right-2 cursor-pointer"
+                    className="w-[18px] h-[18px] absolute right-2 cursor-pointer"
                     viewBox="0 0 128 128"
                   >
                     <path
@@ -179,39 +223,44 @@ export const SignUp = () => {
                   </svg>
                 </div>
               </div>
-              <div class="flex items-center mt-8">
+              <div className="flex items-center mt-8">
                 <input
                   id="remember-me"
                   name="remember-me"
                   type="checkbox"
-                  class="h-4 w-4 shrink-0 rounded"
+                  className="h-4 w-4 shrink-0 rounded"
                 />
                 <label
-                  for="remember-me"
-                  class="text-slate-300 ml-3 block text-sm"
+                  htmlFor="remember-me"
+                  className="text-slate-300 ml-3 block text-sm"
                 >
                   I accept the{" "}
                   <a
                     href="javascript:void(0);"
-                    class="text-purple-400 font-medium hover:underline ml-1"
+                    className="text-purple-400 font-medium hover:underline ml-1"
                   >
                     Terms and Conditions
                   </a>
                 </label>
               </div>
 
-              <div class="mt-8">
+              <div className="mt-8">
                 <button
                   type="submit"
-                  class="w-max shadow-xl py-3 px-6 min-w-32 text-sm text-white font-medium rounded-sm bg-purple-600 hover:bg-purple-500 focus:outline-none cursor-pointer"
+                  className={`w-full py-2 rounded text-white ${
+                    isPending
+                      ? "bg-purple-400 cursor-not-allowed"
+                      : "bg-purple-600 hover:bg-purple-700"
+                  }`}
+                  disabled={isPending}
                 >
-                  Register
+                  {isPending ? "Registering..." : "Register"}
                 </button>
-                <p class="text-sm text-slate-300 mt-8">
+                <p className="text-sm text-slate-300 mt-8">
                   Already have an account?{" "}
                   <Link
                     to={`/sign-in`}
-                    class="text-purple-400 font-medium hover:underline ml-1"
+                    className="text-purple-400 font-medium hover:underline ml-1"
                   >
                     Login here
                   </Link>
