@@ -5,3 +5,21 @@
   height: 100vh;
   width: 100%;
 }
+/* Erweiterung des Themes über @theme*/
+@theme {
+  --font-sans: "Montserrat", ui-sans-serif, system-ui;
+
+  --color-evGreen: #7ED957;
+  --color-evGreen-dark: #69b748;
+
+  --color-evBg: #F5F7FA;
+}
+@layer utilities {
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .animate-fadeIn {
+    animation: fadeIn 0.12s ease-out;
+  }
+}
