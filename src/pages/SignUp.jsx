@@ -1,47 +1,89 @@
-import { useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { Link } from "react-router";
 
-const initialFormState = {
-  name: "",
-  email: "",
-  password: "",
+const API_FALLBACK = "http://localhost:3001/api";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || API_FALLBACK;
+const API_USERS_ENDPOINT = `${API_BASE_URL}/users`;
+
+const saveUser = async (formData) => {
+  try {
+    // function Name soll verändert werden
+    const res = await fetch(API_USERS_ENDPOINT, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(formData),
+      //
+    });
+    if (!res.ok) throw new Error("Fetch failed");
+
+    const data = await res.json();
+    console.log(data);
+  } catch {
+    console.log("error");
+  }
+};
+
+const submitAction = async (prevState, formData) => {
+  const name = formData.get("name");
+  const email = formData.get("email");
+  const password = formData.get("password");
+  const validationErrors = validate({ name, email, password });
+  if (Object.keys(validationErrors).length > 0) {
+    return { error: validationErrors, success: false };
+  }
+  console.log("Submitted:", { name, email, password });
+  alert("Form submitted successfully!");
+  saveUser(formData);
+  return { error: null, success: true }; // clear errors on success
+};
+
+const validate = ({ name, email, password }) => {
+  const newErrors = {};
+  if (!name.trim()) newErrors.name = "Name is required.";
+  if (!email.trim()) {
+    newErrors.email = "Email is required.";
+  } else if (!/\S+@\S+\.\S+/.test(email)) {
+    newErrors.email = "Invalid email format.";
+  }
+  if (!password.trim()) newErrors.password = "password is required.";
+  return newErrors;
 };
 
 export const SignUp = () => {
-  const [formState, setFormstate] = useState(initialFormState);
-  const [data, setData] = useState([]);
+  const [state, formAction, isPending] = useActionState(submitAction, {});
 
+  const [{ name, email, password }, setFormData] = useState({
+    name: "",
+    email: "",
+    password: "",
+  });
   const handleChange = (e) => {
-    const value = e.target.value;
-    const field = e.target.name;
-    const newFormState = { ...formState, [field]: value };
-    setFormstate(newFormState);
+    setFormData((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
   };
-
-  const saveUser = async () => {
-    try {
-      // function Name soll verändert werden
-      const res = await fetch("http://localhost:3001/api/users", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formState),
-        //
+  useEffect(() => {
+    if (state.succes) {
+      setFormData({
+        name: "",
+        email: "",
+        message: "",
       });
-      if (!res.ok) throw new Error("Fetch failed");
-
-      setData(await res.json());
-      console.log(data);
-    } catch {
-      console.log("error");
     }
-  };
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log(formState);
-    saveUser();
-  };
+  }, [state]);
+
+  // const [formState, setFormstate] = useState(initialFormState);
+  // const [data, setData] = useState([]);
+
+  // const handleChange = (e) => {
+  //   const value = e.target.value;
+  //   const field = e.target.name;
+  //   const newFormState = { ...formState, [field]: value };
+  //   setFormstate(newFormState);
+  // };
 
   return (
     <>
@@ -53,17 +95,15 @@ export const SignUp = () => {
             class=" w-full h-full aspect-square object-cover block mx-auto"
             alt="login-image"
           />
-          {/* </div> */}
 
           <div class="flex items-center lg:p-12 p-8 bg-[#0C172C] h-full lg:w-12/12 lg:ml-auto">
-            <form class="max-w-lg w-full mx-auto" onSubmit={handleSubmit}>
+            <form class="max-w-lg w-full mx-auto" onSubmit={formAction}>
               {/* Form */}
               <div class="mb-12">
                 <h1 class="text-3xl font-semibold text-purple-400">
                   Create an account
                 </h1>
               </div>
-
               <div>
                 <label class="text-white text-xs block mb-2" htmlFor="name">
                   Full Name
@@ -76,9 +116,14 @@ export const SignUp = () => {
                     required
                     class="w-full bg-transparent text-sm text-white border-b border-slate-500 focus:border-white pl-2 pr-8 py-3 outline-none"
                     placeholder="Enter name"
-                    value={formState.name}
+                    value={name}
                     onChange={handleChange}
                   />
+                  {state.error?.name && (
+                    <p className="text-sm text-red-600 mt-1">
+                      {state.error?.name}
+                    </p>
+                  )}
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     fill="#bbb"
@@ -110,9 +155,14 @@ export const SignUp = () => {
                     required
                     class="w-full bg-transparent text-sm text-white border-b border-slate-500 focus:border-white pl-2 pr-8 py-3 outline-none"
                     placeholder="Enter email"
-                    value={formState.email}
+                    value={email}
                     onChange={handleChange}
                   />
+                  {state.error?.email && (
+                    <p className="text-sm text-red-600 mt-1">
+                      {state.error?.email}
+                    </p>
+                  )}
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     fill="#bbb"
@@ -158,9 +208,14 @@ export const SignUp = () => {
                     required
                     class="w-full bg-transparent text-sm text-white border-b border-slate-500 focus:border-white pl-2 pr-8 py-3 outline-none"
                     placeholder="Enter password"
-                    value={formState.password}
+                    value={password}
                     onChange={handleChange}
                   />
+                  {state.error?.password && (
+                    <p className="text-sm text-red-600 mt-1">
+                      {state.error?.password}
+                    </p>
+                  )}
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     fill="#bbb"
@@ -199,9 +254,14 @@ export const SignUp = () => {
               <div class="mt-8">
                 <button
                   type="submit"
-                  class="w-max shadow-xl py-3 px-6 min-w-32 text-sm text-white font-medium rounded-sm bg-purple-600 hover:bg-purple-500 focus:outline-none cursor-pointer"
+                  className={`w-full py-2 rounded text-white ${
+                    isPending
+                      ? "bg-purple-400 cursor-not-allowed"
+                      : "bg-purple-600 hover:bg-purple-700"
+                  }`}
+                  disabled={isPending}
                 >
-                  Register
+                  {isPending ? "Registering..." : "Register"}
                 </button>
                 <p class="text-sm text-slate-300 mt-8">
                   Already have an account?{" "}
