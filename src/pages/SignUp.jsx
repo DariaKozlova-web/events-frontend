@@ -1,9 +1,9 @@
 import { useActionState, useState, useEffect } from "react";
 import { Link } from "react-router";
 import { useNavigate } from "react-router";
-import { loginUser, fetchProfile } from "../api/authApi";
+// import { loginUser, fetchProfile } from "../api/authApi";
 import { validate } from "../api/auth.js";
-import { useAuth } from "../context/useAuth";
+//import { useAuth } from "../context/useAuth";
 const API_FALLBACK = "http://localhost:3001/api";
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || API_FALLBACK;
 const API_USERS_ENDPOINT = `${API_BASE_URL}/users`;
@@ -37,32 +37,33 @@ const submitAction = async (prevState, formData) => {
   }
   console.log("Submitted:", { name, email, password });
   alert("Form submitted successfully!");
-  // 1. User registrieren
+  //User registrieren
   await saveUser({ name, email, password });
+  return { error: null, success: true };
   // 2. Direkt nach Registrierung einloggen
-  try {
-    const loginRes = await loginUser({ email, password });
+  // try {
+  //   const loginRes = await loginUser({ email, password });
 
-    let user = loginRes.user;
-    const token = loginRes.token;
+  //   let user = loginRes.user;
+  //   const token = loginRes.token;
 
-    // Falls Backend kein user zurück gibt → nachladen
-    if (!user && token) {
-      user = await fetchProfile(token);
-    }
+  //   // Falls Backend kein user zurück gibt → nachladen
+  //   if (!user && token) {
+  //     user = await fetchProfile(token);
+  //   }
 
-    return {
-      error: null,
-      success: true,
-      auth: { token, user },
-    };
-  } catch (err) {
-    console.error("Failed to fetch profile:", err);
-    return {
-      error: { form: "Registration succeeded but login failed" },
-      success: false,
-    };
-  }
+  //   return {
+  //     error: null,
+  //     success: true,
+  //     auth: { token, user },
+  //   };
+  // } catch (err) {
+  //   console.error("Failed to fetch profile:", err);
+  //   return {
+  //     error: { form: "Registration succeeded but login failed" },
+  //     success: false,
+  //   };
+  // }
 };
 
 // const validate = ({ name, email, password }) => {
@@ -78,7 +79,7 @@ const submitAction = async (prevState, formData) => {
 // };
 
 export const SignUp = () => {
-  const { login } = useAuth();
+  //const { login } = useAuth();
   const navigate = useNavigate();
   const [state, formAction, isPending] = useActionState(submitAction, {});
 
@@ -95,15 +96,21 @@ export const SignUp = () => {
   };
 
   useEffect(() => {
-    if (state.auth?.token && state.auth?.user) {
-      login({
-        token: state.auth.token,
-        user: state.auth.user,
-      });
-
-      navigate("/");
+    if (state.success) {
+      navigate("/sign-in");
     }
-  }, [state, login, navigate]);
+  }, [state, navigate]);
+
+  // useEffect(() => {
+  //   if (state.auth?.token && state.auth?.user) {
+  //     login({
+  //       token: state.auth.token,
+  //       user: state.auth.user,
+  //     });
+
+  //     navigate("/");
+  //   }
+  // }, [state, login, navigate]);
 
   return (
     <>
