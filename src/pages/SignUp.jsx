@@ -120,9 +120,7 @@ export const SignUp = () => {
             <form className="max-w-lg w-full mx-auto" action={formAction}>
               {/* Form */}
               <div className="mb-12">
-                <h1 className="text-3xl font-semibold text-purple-400">
-                  Create an account
-                </h1>
+                <h1 className="text-3xl font-semibold">Create an account</h1>
               </div>
               <div>
                 <label className="text-white text-xs block mb-2" htmlFor="name">
@@ -282,8 +280,8 @@ export const SignUp = () => {
                   type="submit"
                   className={`w-full py-2 rounded text-white ${
                     isPending
-                      ? "bg-purple-400 cursor-not-allowed"
-                      : "bg-purple-600 hover:bg-purple-700"
+                      ? "bg-[#00b9ff] cursor-not-allowed"
+                      : "bg-[#00b9ff] hover:bg-[#4d90fe]"
                   }`}
                   disabled={isPending}
                 >
