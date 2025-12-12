@@ -1,6 +1,9 @@
 import { useActionState, useState, useEffect } from "react";
 import { Link } from "react-router";
 import { useNavigate } from "react-router";
+import { loginUser, fetchProfile } from "../api/authApi";
+import { validate } from "../api/auth.js";
+import { useAuth } from "../context/useAuth";
 const API_FALLBACK = "http://localhost:3001/api";
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || API_FALLBACK;
 const API_USERS_ENDPOINT = `${API_BASE_URL}/users`;
@@ -34,23 +37,48 @@ const submitAction = async (prevState, formData) => {
   }
   console.log("Submitted:", { name, email, password });
   alert("Form submitted successfully!");
-  saveUser({ name, email, password });
-  return { error: null, success: true }; // clear errors on success
+  // 1. User registrieren
+  await saveUser({ name, email, password });
+  // 2. Direkt nach Registrierung einloggen
+  try {
+    const loginRes = await loginUser({ email, password });
+
+    let user = loginRes.user;
+    const token = loginRes.token;
+
+    // Falls Backend kein user zurück gibt → nachladen
+    if (!user && token) {
+      user = await fetchProfile(token);
+    }
+
+    return {
+      error: null,
+      success: true,
+      auth: { token, user },
+    };
+  } catch (err) {
+    console.error("Failed to fetch profile:", err);
+    return {
+      error: { form: "Registration succeeded but login failed" },
+      success: false,
+    };
+  }
 };
 
-const validate = ({ name, email, password }) => {
-  const newErrors = {};
-  if (!name.trim()) newErrors.name = "Name is required.";
-  if (!email.trim()) {
-    newErrors.email = "Email is required.";
-  } else if (!/\S+@\S+\.\S+/.test(email)) {
-    newErrors.email = "Invalid email format.";
-  }
-  if (!password.trim()) newErrors.password = "password is required.";
-  return newErrors;
-};
+// const validate = ({ name, email, password }) => {
+//   const newErrors = {};
+//   if (!name.trim()) newErrors.name = "Name is required.";
+//   if (!email.trim()) {
+//     newErrors.email = "Email is required.";
+//   } else if (!/\S+@\S+\.\S+/.test(email)) {
+//     newErrors.email = "Invalid email format.";
+//   }
+//   if (!password.trim()) newErrors.password = "password is required.";
+//   return newErrors;
+// };
 
 export const SignUp = () => {
+  const { login } = useAuth();
   const navigate = useNavigate();
   const [state, formAction, isPending] = useActionState(submitAction, {});
 
@@ -67,10 +95,15 @@ export const SignUp = () => {
   };
 
   useEffect(() => {
-    if (state.success) {
+    if (state.auth?.token && state.auth?.user) {
+      login({
+        token: state.auth.token,
+        user: state.auth.user,
+      });
+
       navigate("/");
     }
-  }, [state, navigate]);
+  }, [state, login, navigate]);
 
   return (
     <>
